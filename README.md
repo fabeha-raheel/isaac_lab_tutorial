@@ -47,6 +47,24 @@ python -m pip install -e source/isaac_lab_tutorial/
 
 To understand project structure, see this link: [Project Structure](https://isaac-sim.github.io/IsaacLab/main/source/overview/own-project/project_structure.html)
 
+## Creating RL Tasks
+
+The two most important files for defining the RL learning tasks are:
+
+1. The **Env Cfg** file (inherits from DirectRLEnvCfg) - can be found at `~/isaac_lab_tutorial/source/isaac_lab_tutorial/isaac_lab_tutorial/tasks/direct/isaac_lab_tutorial/isaac_lab_tutorial_env_cfg.py`
+   - 3 class instances defined here: **sim** (SimulationCfg), **scene** (InteractiveSceneCfg) and **robot** (ArticulationCfg).
+   - add envconfiguration parameters - can be used from existing templates
+   - add sizes of `action_space`, `observation_space` and `state_space`
+   - also add task-specific attributes such as scaling for reward terms, thresholds for reset conditions
+2. The **Env** file (inherits from DirectRLEnv) - can be found at `~/isaac_lab_tutorial/source/isaac_lab_tutorial/isaac_lab_tutorial/tasks/direct/isaac_lab_tutorial/isaac_lab_tutorial_env.py`
+   - include Env Cfg (which was defined above)
+   - define functions required for task such as applying actions, computing resets, rewards or observations
+   - Create scene using `_setup_scene(self)` method
+   - Define rewards in `_get_rewards(self)` and `computer_rewards()` - get_rewards calls compute_rewards(), compute_rewards() is where all the reward functions are implemented
+   - compute observation buffer in the `_get_observations(self)` method - output should return a dict with "policy" as key and full obs buffer as value. Eg. ```observations = {"policy": obs}```
+   - Reset envs using `_get_dones(self)` and `_reset_idx()` methods - get reset env_ids (time_out and out_of_bounds) in _get_dones(), implement reset logic in _reset_idx()
+   - Apply actions - `_pre_physics_step()` applies actions once per RL step prior to physics steps, `_apply_action()` called decimation no. of times per RL step prior to physics step
+
 
 ## Additional Points
 
