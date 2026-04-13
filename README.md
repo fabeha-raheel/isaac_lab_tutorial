@@ -1,3 +1,46 @@
+# Isaac_lab_Tutorial
+
+This project has been created by following the walkthrough examples from Isaaclab documentation found at:https://isaac-sim.github.io/IsaacLab/main/source/overview/own-project/template.html
+
+## Create a Project:
+
+Install IsaacLab using the installation instructions.
+
+Activate conda environment:
+```bash
+conda activate env_isaaclab
+```
+
+Create an External project using template generator:
+```bash
+cd ~/IsaacLab
+
+./isaaclab.sh --new  # or "./isaaclab.sh -n"
+```
+Set the following:
+
+- Task type: External
+- Project path: <Just press enter - leave home directory for now>
+- Project name: isaac_lab_tutorial
+- Isaac Lab workflow: Direct | single-agent
+- RL library: rsl_rl
+
+The project will be created.
+
+The template creates the project as a python package which needs to be installed so that it is registered with Isaac Lab. 
+
+Install the package using the following commands:
+```bash
+cd ~/isaac_lab_tutorial
+python -m pip install -e source/isaac_lab_tutorial/
+```
+
+Check if installation is successful by listing the envs:
+```bash
+python -m pip install -e source/isaac_lab_tutorial/
+```
+
+
 # Template for Isaac Lab Projects
 
 ## Overview
