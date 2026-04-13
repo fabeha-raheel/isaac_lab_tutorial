@@ -65,6 +65,49 @@ The two most important files for defining the RL learning tasks are:
    - Reset envs using `_get_dones(self)` and `_reset_idx()` methods - get reset env_ids (time_out and out_of_bounds) in _get_dones(), implement reset logic in _reset_idx()
    - Apply actions - `_pre_physics_step()` applies actions once per RL step prior to physics steps, `_apply_action()` called decimation no. of times per RL step prior to physics step
 
+## Add Domain Randomization (DR)
+
+DR is specified using by creating an `EventCfg` class.
+
+Each randomization is configured as an `EventTerm` object that includes:
+
+- `func` param to specify function to call during randomization; they are found in the `events` module
+- `mode` param which can be `"startup"`, `"reset"` or `"interval"`
+- `params` dictionary to provide necessary args to `func`
+
+After setting up `EventCfg`, it needs to be added in the **Env Cfg** file (eg: `isaac_lab_tutorial_env_cfg.py`) and assigned to the variable `events` as:
+
+```python
+class Env_Cfg:
+    events: EventCfg = EventCfg()
+```
+See [example](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_direct_rl_env.html#tutorial-create-direct-rl-env)
+
+## Add Action Noise and Observation Noise
+
+These are added in main task config **Env Cfg** using the `action_noise_model` and `observation_noise_model` variables as follows:
+
+```python
+
+@configclass
+class MyTaskConfig:
+
+    # at every time-step add gaussian noise + bias. The bias is a gaussian sampled at reset
+    action_noise_model: NoiseModelWithAdditiveBiasCfg = NoiseModelWithAdditiveBiasCfg(
+      noise_cfg=GaussianNoiseCfg(mean=0.0, std=0.05, operation="add"),
+      bias_noise_cfg=GaussianNoiseCfg(mean=0.0, std=0.015, operation="abs"),
+    )
+
+    # at every time-step add gaussian noise + bias. The bias is a gaussian sampled at reset
+    observation_noise_model: NoiseModelWithAdditiveBiasCfg = NoiseModelWithAdditiveBiasCfg(
+      noise_cfg=GaussianNoiseCfg(mean=0.0, std=0.002, operation="add"),
+      bias_noise_cfg=GaussianNoiseCfg(mean=0.0, std=0.0001, operation="abs"),
+    )
+```
+
+See [more details](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_direct_rl_env.html#tutorial-create-direct-rl-env)
+
+
 
 ## Additional Points
 
