@@ -47,6 +47,17 @@ python -m pip install -e source/isaac_lab_tutorial/
 
 To understand project structure, see this link: [Project Structure](https://isaac-sim.github.io/IsaacLab/main/source/overview/own-project/project_structure.html)
 
+
+## Additional Points
+
+Add the following in .gitignore to prevent .vscode folder from being pushed into GitHub:
+
+```
+# vscode
+.vscode/
+```
+
+
 # Template for Isaac Lab Projects
 
 ## Overview
