@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from isaaclab_assets.robots.cartpole import CARTPOLE_CFG
+# from isaaclab_assets.robots.cartpole import CARTPOLE_CFG
+from isaac_lab_tutorial.robots.jetbot import JETBOT_CONFIG
 
 from isaaclab.assets import ArticulationCfg
 from isaaclab.envs import DirectRLEnvCfg
@@ -18,23 +19,24 @@ class IsaacLabTutorialEnvCfg(DirectRLEnvCfg):
     decimation = 2
     episode_length_s = 5.0
     # - spaces definition
-    action_space = 1
-    observation_space = 4
+    action_space = 2
+    observation_space = 3
     state_space = 0
 
     # simulation
     sim: SimulationCfg = SimulationCfg(dt=1 / 120, render_interval=decimation)
 
     # robot(s)
-    robot_cfg: ArticulationCfg = CARTPOLE_CFG.replace(prim_path="/World/envs/env_.*/Robot")
+    robot_cfg: ArticulationCfg = JETBOT_CONFIG.replace(prim_path="/World/envs/env_.*/Robot")
 
     # scene
-    scene: InteractiveSceneCfg = InteractiveSceneCfg(num_envs=4096, env_spacing=4.0, replicate_physics=True)
+    scene: InteractiveSceneCfg = InteractiveSceneCfg(num_envs=100, env_spacing=4.0, replicate_physics=True)
+    dof_names = ["left_wheel_joint", "right_wheel_joint"]
 
     # custom parameters/scales
     # - controllable joint
-    cart_dof_name = "slider_to_cart"
-    pole_dof_name = "cart_to_pole"
+    # cart_dof_name = "slider_to_cart"
+    # pole_dof_name = "cart_to_pole"
     # - action scale
     action_scale = 100.0  # [N]
     # - reward scales

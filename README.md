@@ -108,6 +108,67 @@ class MyTaskConfig:
 
 See [more details](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_direct_rl_env.html#tutorial-create-direct-rl-env)
 
+## Adding your Robots
+
+### Create robots
+
+New robots can be added to the project in separate files.
+
+1. Create a directory called  `robots` in `isaac_lab_tutorial/source/isaac_lab_tutorial/isaac_lab_tutorial`.
+2. Inside the `robots` folder, create the `__init__.py` file first.
+3. Then create new files for separate robots that need to be added in the project. Eg: `jetbot.py`.
+
+A minimal way to create a robot file is as follows:
+
+```python
+import isaaclab.sim as sim_utils
+from isaaclab.assets import ArticulationCfg
+from isaaclab.actuators import ImplicitActuatorCfg
+from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
+
+JETBOT_CONFIG = ArticulationCfg(
+    spawn=sim_utils.UsdFileCfg(usd_path=f"{ISAAC_NUCLEUS_DIR}/Robots/NVIDIA/Jetbot/jetbot.usd"),
+    actuators={"wheel_acts": ImplicitActuatorCfg(joint_names_expr=[".*"], damping=None, stiffness=None)},
+)
+```
+
+### Modify Env Cfg File
+
+Import the robot inside the **Env Cfg** file as follows:
+
+```python
+from isaac_lab_tutorial.robots.jetbot import JETBOT_CONFIG
+```
+
+Then replace the `robot_cfg` variable in the **Env Cfg** class such as the following example. Also modify the `action_space`, `observation_space`, `state_space` and `dof_names` variables.
+
+```python
+@configclass
+class IsaacLabTutorialEnvCfg(DirectRLEnvCfg):
+    # env
+    decimation = 2
+    episode_length_s = 5.0
+    # - spaces definition
+    action_space = 2
+    observation_space = 3
+    state_space = 0
+    # simulation
+    sim: SimulationCfg = SimulationCfg(dt=1 / 120, render_interval=decimation)
+    # robot(s)
+    robot_cfg: ArticulationCfg = JETBOT_CONFIG.replace(prim_path="/World/envs/env_.*/Robot")
+    # scene
+    scene: InteractiveSceneCfg = InteractiveSceneCfg(num_envs=100, env_spacing=4.0, replicate_physics=True)
+    dof_names = ["left_wheel_joint", "right_wheel_joint"]
+```
+
+Also modify the `scene` parameters such as `num_envs` and `env_spacing`.
+
+### Modify Env file
+
+
+
+More information about adding different robot assets to the project can be found [here](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/01_assets/add_new_robot.html#tutorial-add-new-robot).
+
 ## Additional Points
 
 Add the following in .gitignore to prevent .vscode folder from being pushed into GitHub:
