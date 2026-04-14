@@ -1,6 +1,6 @@
 # Isaac_lab_Tutorial
 
-This project has been created by following the walkthrough examples from Isaaclab documentation found at:https://isaac-sim.github.io/IsaacLab/main/source/overview/own-project/template.html
+This project has been created by following the walkthrough examples from Isaaclab documentation found at: [Isaac Lab Documentation](https://isaac-sim.github.io/IsaacLab/main/source/overview/own-project/template.html)
 
 ## Create a Project
 
@@ -81,6 +81,7 @@ After setting up `EventCfg`, it needs to be added in the **Env Cfg** file (eg: `
 class Env_Cfg:
     events: EventCfg = EventCfg()
 ```
+
 See [example](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_direct_rl_env.html#tutorial-create-direct-rl-env)
 
 ## Add Action Noise and Observation Noise
@@ -107,19 +108,18 @@ class MyTaskConfig:
 
 See [more details](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_direct_rl_env.html#tutorial-create-direct-rl-env)
 
-
-
 ## Additional Points
 
 Add the following in .gitignore to prevent .vscode folder from being pushed into GitHub:
 
-```
+```bash
 # vscode
 .vscode/
 ```
 
+---
 
-# Template for Isaac Lab Projects
+<!-- # Template for Isaac Lab Projects
 
 ## Overview
 
@@ -252,5 +252,5 @@ Some examples of packages that can likely be excluded are:
 "<path-to-isaac-sim>/extscache/omni.kit.*"          // Kit UI tools
 "<path-to-isaac-sim>/extscache/omni.graph.*"        // Graph UI tools
 "<path-to-isaac-sim>/extscache/omni.services.*"     // Services tools
-...
+... -->
 ```
