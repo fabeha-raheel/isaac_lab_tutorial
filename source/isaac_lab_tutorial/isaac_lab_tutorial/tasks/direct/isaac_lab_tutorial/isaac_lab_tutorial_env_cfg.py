@@ -20,7 +20,16 @@ class IsaacLabTutorialEnvCfg(DirectRLEnvCfg):
     episode_length_s = 5.0
     # - spaces definition
     action_space = 2
-    observation_space = 3
+    # observation_space = 9 # lin_vel (dim 3) + ang_vel (dim 3) + cmd_vel (dim 3) 
+    # We need to keep observation_space as small as possible (see Occam's razor)
+    
+    observation_space = 3 # dot prod (alignment), z comp of cross prod (alignment dir), fwd speed
+    #   dot prod btw cmd & fwd vel - tells us alignment;
+    #   if dot prod large and +ve, strong alignment; large and -ve, aligned but opp. dire; 0, perpendicular
+    # 
+    #   cross prod btw cmd & fwd vel - tells alignement (in vector form); gives vector perpdicular to both
+    #   In 2D, only z comp useful. 
+    #   If z comp of cross prod is 0, vectors are colinear; +ve, cmd vec is left of fwd; -ve cmd vec is right of fwd
     state_space = 0
 
     # simulation

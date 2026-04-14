@@ -173,7 +173,7 @@ Also modify the `scene` parameters such as `num_envs` and `env_spacing`.
 
 More information about adding different robot assets to the project can be found [in this tutorial](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/01_assets/add_new_robot.html#tutorial-add-new-robot).
 
-## Adding Visualization Markers
+## Adding Visualization Markers for Ground Truth and Training
 
 1. Define visualization markers by adding the following code at the top of the **Env*** file (in global scope):
 

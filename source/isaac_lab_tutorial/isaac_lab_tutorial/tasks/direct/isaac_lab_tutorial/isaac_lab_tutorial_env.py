@@ -115,10 +115,25 @@ class IsaacLabTutorialEnv(DirectRLEnv):
         #     ),
         #     dim=-1,
         # )
-        # observations = {"policy": obs}
 
-        self.velocity = self.robot.data.root_com_lin_vel_b
-        observations = {"policy": self.velocity}
+        # obs space includes lin_vel (dim 3), ang_vel (dim 3), cmd_vel (dim 3) 
+        self.velocity = self.robot.data.root_com_vel_w
+        self.forwards = math_utils.quat_apply(self.robot.data.root_link_quat_w, self.robot.data.FORWARD_VEC_B)
+        
+        dot = torch.sum(self.forwards * self.commands, dim=-1, keepdim=True)
+        cross = torch.cross(self.forwards, self.commands, dim=-1)[:,-1].reshape(-1,1)
+        forward_speed = self.robot.data.root_com_lin_vel_b[:,0].reshape(-1,1)
+        obs = torch.hstack((dot, cross, forward_speed))
+
+        #   dot prod btw cmd & fwd vel - tells us alignment;
+        #   if dot prod large and +ve, strong alignment; large and -ve, aligned but opp. dire; 0, perpendicular
+        # 
+        #   cross prod btw cmd & fwd vel - tells alignement (in vector form); gives vector perpdicular to both
+        #   In 2D, only z comp useful. 
+        #   If z comp of cross prod is 0, vectors are colinear; +ve, cmd vec is left of fwd; -ve cmd vec is right of fwd
+
+        observations = {"policy": obs}
+
         return observations
 
     def _get_rewards(self) -> torch.Tensor:
@@ -134,7 +149,21 @@ class IsaacLabTutorialEnv(DirectRLEnv):
         #     self.joint_vel[:, self._cart_dof_idx[0]],
         #     self.reset_terminated,
         # )
-        total_reward = torch.linalg.norm(self.velocity, dim=-1, keepdim=True)
+        # total_reward = torch.linalg.norm(self.velocity, dim=-1, keepdim=True)
+
+        forward_reward = self.robot.data.root_com_lin_vel_b[:,0].reshape(-1,1)
+        alignment_reward = torch.sum(self.forwards * self.commands, dim=-1, keepdim=True)
+        
+        # total_reward = forward_reward + alignment_reward # Adding corresponds to logical "OR"
+
+        # total_reward = forward_reward*alignment_reward # Multiplying corresponds to logical "AND"
+        # this works but robot learns to drive in reverse to cmd is pointed backwards
+        # Because, if robot drives in reverse, fwd vel is -ve and alignment term is also -ve. Multiplication results in +ve reward 
+        # Known as "degenerate solution"
+
+        total_reward = forward_reward*torch.exp(alignment_reward) # solution to degenerate case
+        # exp forces large -ve values to 0; so if robot is misaligned, it will not be rewarded
+        
         return total_reward
 
     def _get_dones(self) -> tuple[torch.Tensor, torch.Tensor]:
