@@ -63,7 +63,7 @@ The two most important files for defining the RL learning tasks are:
    - Define rewards in `_get_rewards(self)` and `computer_rewards()` - get_rewards calls compute_rewards(), compute_rewards() is where all the reward functions are implemented
    - compute observation buffer in the `_get_observations(self)` method - output should return a dict with "policy" as key and full obs buffer as value. Eg. ```observations = {"policy": obs}```
    - Reset envs using `_get_dones(self)` and `_reset_idx()` methods - get reset env_ids (time_out and out_of_bounds) in _get_dones(), implement reset logic in _reset_idx()
-   - Apply actions - `_pre_physics_step()` applies actions once per RL step prior to physics steps, `_apply_action()` called decimation no. of times per RL step prior to physics step
+   - Apply actions - `_pre_physics_step()` applies actions once per RL step prior to physics steps, `_apply_action()` called decimation no. of times per RL step prior to physics step. Multiple physics steps can occur per action taken by a policy. **_In simple words: `pre_physics_step()` is called every sim step; `_apply_action()` is called only after every RL step when policy outputs an action._**
 
 ## Add Domain Randomization (DR)
 
@@ -165,9 +165,126 @@ Also modify the `scene` parameters such as `num_envs` and `env_spacing`.
 
 ### Modify Env file
 
+1. Modify the `__init__()` function by specifying the correct joints to find from the robot.
+2. Modify `_setup_scene()` if required.
+3. Modify the `_pre_physics_step()` and `_apply_action()` functions. Any action that needs to be applied at every sim step is added in `_pre_physics_step()`. The output output by the decision-making RL policy is added in `_apply_action()` function.
+4. Modify `_get_observations()` and `_get_rewards()`. We can get observations through ```self.robot.data```.
+5. Add termination and reset conditions in `_get_dones()` and `_reset_idx()` functions.
 
+More information about adding different robot assets to the project can be found [in this tutorial](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/01_assets/add_new_robot.html#tutorial-add-new-robot).
 
-More information about adding different robot assets to the project can be found [here](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/01_assets/add_new_robot.html#tutorial-add-new-robot).
+## Adding Visualization Markers
+
+1. Define visualization markers by adding the following code at the top of the **Env*** file (in global scope):
+
+```python
+from isaaclab.markers import VisualizationMarkers, VisualizationMarkersCfg
+from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
+import isaaclab.utils.math as math_utils
+
+def define_markers() -> VisualizationMarkers:
+    """Define markers with various different shapes."""
+    marker_cfg = VisualizationMarkersCfg(
+        prim_path="/Visuals/myMarkers",
+        markers={
+                "forward": sim_utils.UsdFileCfg(
+                    usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/UIElements/arrow_x.usd",
+                    scale=(0.25, 0.25, 0.5),
+                    visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.0, 1.0, 1.0)),
+                ),
+                "command": sim_utils.UsdFileCfg(
+                    usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/UIElements/arrow_x.usd",
+                    scale=(0.25, 0.25, 0.5),
+                    visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(1.0, 0.0, 0.0)),
+                ),
+        },
+    )
+    return VisualizationMarkers(cfg=marker_cfg)
+```
+
+2. Then modify the `_setup_scene()` function to include the markers. Eg: add the following code to add markers for both commands and robot's forward vel:
+
+```python
+def _setup_scene(self):
+
+    # ... existing code ...
+
+    self.visualization_markers = define_markers()
+
+    # setting aside useful variables for later
+    self.up_dir = torch.tensor([0.0, 0.0, 1.0]).cuda()
+    self.yaws = torch.zeros((self.cfg.scene.num_envs, 1)).cuda()
+    self.commands = torch.randn((self.cfg.scene.num_envs, 3)).cuda()
+    self.commands[:,-1] = 0.0
+    self.commands = self.commands/torch.linalg.norm(self.commands, dim=1, keepdim=True)
+
+    # offsets to account for atan range and keep things on [-pi, pi]
+    ratio = self.commands[:,1]/(self.commands[:,0]+1E-8)
+    gzero = torch.where(self.commands > 0, True, False)
+    lzero = torch.where(self.commands < 0, True, False)
+    plus = lzero[:,0]*gzero[:,1]
+    minus = lzero[:,0]*lzero[:,1]
+    offsets = torch.pi*plus - torch.pi*minus
+    self.yaws = torch.atan(ratio).reshape(-1,1) + offsets.reshape(-1,1)
+
+    self.marker_locations = torch.zeros((self.cfg.scene.num_envs, 3)).cuda()
+    self.marker_offset = torch.zeros((self.cfg.scene.num_envs, 3)).cuda()
+    self.marker_offset[:,-1] = 0.5
+    self.forward_marker_orientations = torch.zeros((self.cfg.scene.num_envs, 4)).cuda()
+    self.command_marker_orientations = torch.zeros((self.cfg.scene.num_envs, 4)).cuda()
+
+```
+Read [this tutorial](https://isaac-sim.github.io/IsaacLab/main/source/setup/walkthrough/training_jetbot_gt.html) to understand how to calculate and create marker directions.
+
+3. Add function to visualize the markers and call the function in the `_pre_physics_step()` function
+
+```python
+def _visualize_markers(self):
+    # get marker locations and orientations
+    self.marker_locations = self.robot.data.root_pos_w
+    self.forward_marker_orientations = self.robot.data.root_quat_w
+    self.command_marker_orientations = math_utils.quat_from_angle_axis(self.yaws, self.up_dir).squeeze()
+
+    # offset markers so they are above the jetbot
+    loc = self.marker_locations + self.marker_offset
+    loc = torch.vstack((loc, loc))
+    rots = torch.vstack((self.forward_marker_orientations, self.command_marker_orientations))
+
+    # render the markers
+    all_envs = torch.arange(self.cfg.scene.num_envs)
+    indices = torch.hstack((torch.zeros_like(all_envs), torch.ones_like(all_envs)))
+    self.visualization_markers.visualize(loc, rots, marker_indices=indices)
+```
+
+4. Add code to reset markers inside `_reset_idx()`.
+
+```python
+def _reset_idx(self, env_ids: Sequence[int] | None):
+    if env_ids is None:
+        env_ids = self.robot._ALL_INDICES
+    super()._reset_idx(env_ids)
+
+    # pick new commands for reset envs
+    self.commands[env_ids] = torch.randn((len(env_ids), 3)).cuda()
+    self.commands[env_ids,-1] = 0.0
+    self.commands[env_ids] = self.commands[env_ids]/torch.linalg.norm(self.commands[env_ids], dim=1, keepdim=True)
+
+    # recalculate the orientations for the command markers with the new commands
+    ratio = self.commands[env_ids][:,1]/(self.commands[env_ids][:,0]+1E-8)
+    gzero = torch.where(self.commands[env_ids] > 0, True, False)
+    lzero = torch.where(self.commands[env_ids]< 0, True, False)
+    plus = lzero[:,0]*gzero[:,1]
+    minus = lzero[:,0]*lzero[:,1]
+    offsets = torch.pi*plus - torch.pi*minus
+    self.yaws[env_ids] = torch.atan(ratio).reshape(-1,1) + offsets.reshape(-1,1)
+
+    # set the root state for the reset envs
+    default_root_state = self.robot.data.default_root_state[env_ids]
+    default_root_state[:, :3] += self.scene.env_origins[env_ids]
+
+    self.robot.write_root_state_to_sim(default_root_state, env_ids)
+    self._visualize_markers()
+```
 
 ## Additional Points
 
