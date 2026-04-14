@@ -30,7 +30,7 @@ Set the following:
 
 The project will be created.
 
-The template creates the project as a python package which needs to be installed so that it is registered with Isaac Lab. 
+The template creates the project as a python package which needs to be installed so that it is registered with Isaac Lab.
 
 Install the package using the following commands:
 
