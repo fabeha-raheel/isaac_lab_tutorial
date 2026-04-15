@@ -69,6 +69,3 @@ tests/
 
 # Docker history
 .isaac-lab-docker-history
-
-# vscode
-.vscode/
