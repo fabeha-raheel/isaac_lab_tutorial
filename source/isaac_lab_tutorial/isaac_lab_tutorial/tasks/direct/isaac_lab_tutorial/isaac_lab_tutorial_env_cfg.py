@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from isaaclab_assets.robots.cartpole import CARTPOLE_CFG
+# from isaaclab_assets.robots.cartpole import CARTPOLE_CFG
+from isaac_lab_tutorial.robots.jetbot import JETBOT_CONFIG
 
 from isaaclab.assets import ArticulationCfg
 from isaaclab.envs import DirectRLEnvCfg
@@ -18,23 +19,33 @@ class IsaacLabTutorialEnvCfg(DirectRLEnvCfg):
     decimation = 2
     episode_length_s = 5.0
     # - spaces definition
-    action_space = 1
-    observation_space = 4
+    action_space = 2
+    # observation_space = 9 # lin_vel (dim 3) + ang_vel (dim 3) + cmd_vel (dim 3) 
+    # We need to keep observation_space as small as possible (see Occam's razor)
+    
+    observation_space = 3 # dot prod (alignment), z comp of cross prod (alignment dir), fwd speed
+    #   dot prod btw cmd & fwd vel - tells us alignment;
+    #   if dot prod large and +ve, strong alignment; large and -ve, aligned but opp. dire; 0, perpendicular
+    # 
+    #   cross prod btw cmd & fwd vel - tells alignement (in vector form); gives vector perpdicular to both
+    #   In 2D, only z comp useful. 
+    #   If z comp of cross prod is 0, vectors are colinear; +ve, cmd vec is left of fwd; -ve cmd vec is right of fwd
     state_space = 0
 
     # simulation
     sim: SimulationCfg = SimulationCfg(dt=1 / 120, render_interval=decimation)
 
     # robot(s)
-    robot_cfg: ArticulationCfg = CARTPOLE_CFG.replace(prim_path="/World/envs/env_.*/Robot")
+    robot_cfg: ArticulationCfg = JETBOT_CONFIG.replace(prim_path="/World/envs/env_.*/Robot")
 
     # scene
-    scene: InteractiveSceneCfg = InteractiveSceneCfg(num_envs=4096, env_spacing=4.0, replicate_physics=True)
+    scene: InteractiveSceneCfg = InteractiveSceneCfg(num_envs=100, env_spacing=4.0, replicate_physics=True)
+    dof_names = ["left_wheel_joint", "right_wheel_joint"]
 
     # custom parameters/scales
     # - controllable joint
-    cart_dof_name = "slider_to_cart"
-    pole_dof_name = "cart_to_pole"
+    # cart_dof_name = "slider_to_cart"
+    # pole_dof_name = "cart_to_pole"
     # - action scale
     action_scale = 100.0  # [N]
     # - reward scales
