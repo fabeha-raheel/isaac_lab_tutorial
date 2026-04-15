@@ -26,7 +26,7 @@ Set the following:
 - Project path: <Just press enter - leave home directory for now>
 - Project name: isaac_lab_tutorial
 - Isaac Lab workflow: Direct | single-agent
-- RL library: rsl_rl
+- RL library: select all
 
 The project will be created.
 
