@@ -163,7 +163,7 @@ class IsaacLabTutorialEnv(DirectRLEnv):
 
         total_reward = forward_reward*torch.exp(alignment_reward) # solution to degenerate case
         # exp forces large -ve values to 0; so if robot is misaligned, it will not be rewarded
-        
+
         return total_reward
 
     def _get_dones(self) -> tuple[torch.Tensor, torch.Tensor]:

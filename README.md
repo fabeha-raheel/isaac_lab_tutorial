@@ -47,6 +47,17 @@ python -m pip install -e source/isaac_lab_tutorial/
 
 To understand project structure, see this link: [Project Structure](https://isaac-sim.github.io/IsaacLab/main/source/overview/own-project/project_structure.html)
 
+## Training and Evaluation
+
+To train a policy:
+
+```bash
+python scripts/rsl_rl/train.py --task=Template-Isaac-Lab-Tutorial-Direct-v0
+
+# or
+python scripts/skrl/train.py --task=Template-Isaac-Lab-Tutorial-Direct-v0
+```
+
 ## Creating RL Tasks
 
 The two most important files for defining the RL learning tasks are:
