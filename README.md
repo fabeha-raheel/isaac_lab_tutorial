@@ -42,7 +42,7 @@ python -m pip install -e source/isaac_lab_tutorial/
 Check if installation is successful by listing the envs:
 
 ```bash
-python -m pip install -e source/isaac_lab_tutorial/
+python scripts/list_envs.py
 ```
 
 To understand project structure, see this link: [Project Structure](https://isaac-sim.github.io/IsaacLab/main/source/overview/own-project/project_structure.html)
@@ -295,15 +295,6 @@ def _reset_idx(self, env_ids: Sequence[int] | None):
 
     self.robot.write_root_state_to_sim(default_root_state, env_ids)
     self._visualize_markers()
-```
-
-## Additional Points
-
-Add the following in .gitignore to prevent .vscode folder from being pushed into GitHub:
-
-```bash
-# vscode
-.vscode/
 ```
 
 ---
